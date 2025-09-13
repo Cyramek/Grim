@@ -5,8 +5,6 @@ import ac.grim.grimac.player.GrimPlayer;
 import ac.grim.grimac.utils.anticheat.LogUtil;
 import ac.grim.grimac.utils.anticheat.MessageUtil;
 import ac.grim.grimac.utils.common.GrimArguments;
-import ac.grim.grimac.utils.data.Pair;
-import com.github.retrooper.packetevents.netty.channel.ChannelHelper;
 
 import java.util.*;
 
@@ -35,7 +33,7 @@ public class LatencyUtils implements ILatencyUtils {
     private void addRealTimeTaskInternal(int transactionId, boolean async, Runnable runnable) {
         if (player.lastTransactionReceived.get() >= transactionId) {
             if (async) {
-                ChannelHelper.runInEventLoop(player.user.getChannel(), runnable);
+                player.runSafely(runnable);
             } else {
                 runnable.run();
             }

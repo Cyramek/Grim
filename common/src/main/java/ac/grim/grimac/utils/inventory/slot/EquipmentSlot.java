@@ -3,7 +3,6 @@ package ac.grim.grimac.utils.inventory.slot;
 import ac.grim.grimac.player.GrimPlayer;
 import ac.grim.grimac.utils.inventory.EquipmentType;
 import ac.grim.grimac.utils.inventory.InventoryStorage;
-import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.protocol.item.ItemStack;
 import com.github.retrooper.packetevents.protocol.item.enchantment.type.EnchantmentTypes;
 import com.github.retrooper.packetevents.protocol.player.GameMode;

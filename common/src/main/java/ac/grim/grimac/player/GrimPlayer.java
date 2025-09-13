@@ -209,6 +209,7 @@ public class GrimPlayer implements GrimUser {
     public final CompensatedFireworks fireworks;
     public final CompensatedWorld compensatedWorld;
     public final CompensatedEntities compensatedEntities;
+    public final CompensatedInventory inventory;
     public final ILatencyUtils latencyUtils = new LatencyUtils(this);
     public final PointThreeEstimator pointThreeEstimator;
     public final TrigHandler trigHandler = new TrigHandler(this);
@@ -277,6 +278,7 @@ public class GrimPlayer implements GrimUser {
         this.user = user;
         this.uuid = user.getUUID();
         fireworks = new CompensatedFireworks(this); // Must be before checkmanager
+        inventory = new CompensatedInventory(this);
 
         lastInstanceManager = new LastInstanceManager(this);
         actionManager = new ActionManager(this);
@@ -478,7 +480,7 @@ public class GrimPlayer implements GrimUser {
             }
 
             if (async) {
-                ChannelHelper.runInEventLoop(user.getChannel(), () -> {
+                runSafely(() -> {
                     addTransactionSend(transactionID);
                     user.writePacket(packet);
                 });
@@ -493,10 +495,6 @@ public class GrimPlayer implements GrimUser {
 
     public void addTransactionSend(short id) {
         didWeSendThatTrans.add(id);
-    }
-
-    public boolean isEyeInFluid(FluidTag tag) {
-        return this.fluidOnEyes == tag;
     }
 
     public double getEyeHeight() {
@@ -545,7 +543,7 @@ public class GrimPlayer implements GrimUser {
             GrimAPI.INSTANCE.getPlayerDataManager().remove(user);
         }
 
-        if (viaPacketTracker == null && ViaVersionUtil.isAvailable() && uuid != null) {
+        if (viaPacketTracker == null && ViaVersionUtil.isAvailable && uuid != null) {
             UserConnection connection = Via.getManager().getConnectionManager().getConnectedClient(uuid);
             viaPacketTracker = connection != null ? connection.getPacketTracker() : null;
             this.viaUserConnection = connection;
@@ -644,10 +642,6 @@ public class GrimPlayer implements GrimUser {
 
     public EntityType getVehicleType() {
         return inVehicle() ? getVehicle().type : null;
-    }
-
-    public CompensatedInventory getInventory() {
-        return checkManager.getInventory();
     }
 
     public double[] getPossibleEyeHeights() { // We don't return sleeping eye height
@@ -794,11 +788,10 @@ public class GrimPlayer implements GrimUser {
         // Servers older than 1.21.2 don't have this component
         if (getClientVersion().isOlderThan(ClientVersion.V_1_21_2)
                 || PacketEvents.getAPI().getServerManager().getVersion().isOlderThan(ServerVersion.V_1_21_2)) {
-            final ItemStack chestPlate = getInventory().getChestplate();
+            final ItemStack chestPlate = inventory.getChestplate();
             return chestPlate.getType() == ItemTypes.ELYTRA && chestPlate.getDamageValue() < chestPlate.getMaxDamage() - 1;
         }
 
-        final CompensatedInventory inventory = getInventory();
         // PacketEvents mappings are wrong
         // TODO https://github.com/retrooper/packetevents/pull/1125
         return isGlider(inventory.getHelmet(), EquipmentSlot.CHEST_PLATE)

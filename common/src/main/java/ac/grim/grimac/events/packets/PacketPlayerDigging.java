@@ -41,7 +41,7 @@ public class PacketPlayerDigging extends PacketListenerAbstract {
     private static final boolean SERVER_HAS_OFFHAND = PacketEvents.getAPI().getServerManager().getVersion().isNewerThanOrEquals(ServerVersion.V_1_9);
 
     public static void handleUseItem(@NotNull GrimPlayer player, @NotNull InteractionHand hand) {
-        ItemStack item = player.getInventory().getItemInHand(hand);
+        ItemStack item = player.inventory.getItemInHand(hand);
 
         if (item == null) {
             player.packetStateData.setSlowedByUsingItem(false);
@@ -194,7 +194,7 @@ public class PacketPlayerDigging extends PacketListenerAbstract {
                 player.packetStateData.slowedByUsingItemTransaction = player.lastTransactionReceived.get();
 
                 if (PacketEvents.getAPI().getServerManager().getVersion().isNewerThanOrEquals(ServerVersion.V_1_13)) {
-                    ItemStack hand = player.getInventory().getItemInHand(player.packetStateData.itemInUseHand);
+                    ItemStack hand = player.inventory.getItemInHand(player.packetStateData.itemInUseHand);
 
                     if (hand.getType() == ItemTypes.TRIDENT && hand.getEnchantmentLevel(EnchantmentTypes.RIPTIDE) > 0) {
                         player.packetStateData.tryingToRiptide = true;
@@ -210,7 +210,7 @@ public class PacketPlayerDigging extends PacketListenerAbstract {
                     && !player.packetStateData.lastPacketWasOnePointSeventeenDuplicate) {
                 boolean slotChanged = player.packetStateData.itemInUseHand != InteractionHand.OFF_HAND
                         && player.packetStateData.getSlowedByUsingItemSlot() != player.packetStateData.lastSlotSelected;
-                if (slotChanged || player.getInventory().getItemInHand(player.packetStateData.itemInUseHand).isEmpty()) {
+                if (slotChanged || player.inventory.getItemInHand(player.packetStateData.itemInUseHand).isEmpty()) {
                     player.packetStateData.setSlowedByUsingItem(false);
                     if (slotChanged) player.checkManager.getPostPredictionCheck(NoSlow.class).didSlotChangeLastTick = true;
                 }
