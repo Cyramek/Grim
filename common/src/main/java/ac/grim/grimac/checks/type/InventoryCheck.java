@@ -27,7 +27,7 @@ public class InventoryCheck extends BlockPlaceCheck implements PacketCheck {
             if (closeTransaction != NONE && shouldModifyPackets()) {
                 event.setCancelled(true);
                 player.onPacketCancel();
-                player.getInventory().needResend = true;
+                player.inventory.needResend = true;
             }
         } else if (event.getPacketType() == PacketType.Play.Client.CLOSE_WINDOW) {
             // Players with high ping can close inventory faster than send transaction back
@@ -42,7 +42,7 @@ public class InventoryCheck extends BlockPlaceCheck implements PacketCheck {
             return;
         }
 
-        int windowId = player.getInventory().openWindowID;
+        int windowId = player.inventory.openWindowID;
 
         player.user.writePacket(new WrapperPlayServerCloseWindow(windowId));
 
