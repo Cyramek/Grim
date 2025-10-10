@@ -6,11 +6,12 @@ import ac.grim.grimac.manager.init.start.SuperDebug;
 import ac.grim.grimac.platform.api.sender.Sender;
 import ac.grim.grimac.utils.anticheat.LogUtil;
 import ac.grim.grimac.utils.anticheat.MessageUtil;
-import org.checkerframework.checker.nullness.qual.NonNull;
+import ac.grim.grimac.utils.common.GrimArguments;
 import org.incendo.cloud.Command;
 import org.incendo.cloud.CommandManager;
 import org.incendo.cloud.context.CommandContext;
 import org.incendo.cloud.parser.standard.IntegerParser;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -38,7 +39,7 @@ public class GrimLog implements BuildableCommand {
     }
 
     private static void sendLog(Sender sender, String log, String success, String failure, Consumer<String> consumer, String type) throws IOException {
-        URL mUrl = new URL("https://paste.grim.ac/data/post");
+        URL mUrl = new URL(GrimArguments.PASTE_URL + "data/post");
         HttpURLConnection urlConn = (HttpURLConnection) mUrl.openConnection();
         try {
             urlConn.setDoOutput(true);
@@ -52,7 +53,7 @@ public class GrimLog implements BuildableCommand {
             final int response = urlConn.getResponseCode();
             if (response == HttpURLConnection.HTTP_CREATED) {
                 String responseURL = urlConn.getHeaderField("Location");
-                String message = success.replace("%url%", "https://paste.grim.ac/" + responseURL);
+                String message = success.replace("%url%", GrimArguments.PASTE_URL + responseURL);
                 consumer.accept(message);
                 message = MessageUtil.replacePlaceholders(sender, message);
                 sender.sendMessage(MessageUtil.miniMessage(message));
@@ -80,7 +81,7 @@ public class GrimLog implements BuildableCommand {
                 .command(commandManager.commandBuilder("gl").proxies(command));
     }
 
-    private void handleLog(@NonNull CommandContext<Sender> context) {
+    private void handleLog(@NotNull CommandContext<Sender> context) {
         Sender sender = context.sender();
         int flagId = context.get("flagId");
 

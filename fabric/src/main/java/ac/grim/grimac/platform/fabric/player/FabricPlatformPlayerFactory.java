@@ -5,18 +5,16 @@ import ac.grim.grimac.platform.api.player.AbstractPlatformPlayerFactory;
 import ac.grim.grimac.platform.api.player.OfflinePlatformPlayer;
 import ac.grim.grimac.platform.fabric.GrimACFabricLoaderPlugin;
 import com.mojang.authlib.GameProfile;
+import lombok.RequiredArgsConstructor;
 import net.minecraft.entity.Entity;
 import net.minecraft.server.network.ServerPlayerEntity;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Function;
 
+@RequiredArgsConstructor
 public class FabricPlatformPlayerFactory extends AbstractPlatformPlayerFactory<ServerPlayerEntity> {
 
     private final Map<UUID, OfflinePlatformPlayer> offlinePlatformPlayerCache = new HashMap<>();
@@ -24,22 +22,13 @@ public class FabricPlatformPlayerFactory extends AbstractPlatformPlayerFactory<S
     private final Function<Entity, GrimEntity> getEntityFunction;
     private final Function<ServerPlayerEntity, AbstractFabricPlatformInventory> getPlayerInventoryFunction;
 
-    public FabricPlatformPlayerFactory(Function<ServerPlayerEntity, AbstractFabricPlatformPlayer> playerSupplier,
-                                       Function<Entity, GrimEntity> getEntityFunction,
-                                       Function<ServerPlayerEntity, AbstractFabricPlatformInventory> getInventoryFunction
-    ) {
-        this.getPlayerFunction = playerSupplier;
-        this.getEntityFunction = getEntityFunction;
-        this.getPlayerInventoryFunction = getInventoryFunction;
-    }
-
     @Override
     protected ServerPlayerEntity getNativePlayer(@NotNull UUID uuid) {
         return GrimACFabricLoaderPlugin.FABRIC_SERVER.getPlayerManager().getPlayer(uuid);
     }
 
     @Override
-    protected ServerPlayerEntity getNativePlayer(@NonNull String name) {
+    protected ServerPlayerEntity getNativePlayer(@NotNull String name) {
         return GrimACFabricLoaderPlugin.FABRIC_SERVER.getPlayerManager().getPlayer(name);
     }
 
@@ -76,13 +65,12 @@ public class FabricPlatformPlayerFactory extends AbstractPlatformPlayerFactory<S
                 profile = GrimACFabricLoaderPlugin.LOADER.getPlatformServer().getProfileByName(name);
             }
 
-            if (profile == null) {
-                // Make an OfflinePlayer using an offline mode UUID since the name has no profile
-                result = this.getOfflinePlayer(new GameProfile(UUID.nameUUIDFromBytes(("OfflinePlayer:" + name).getBytes(StandardCharsets.UTF_8)), name));
-            } else {
-                // Use the GameProfile even when we get a UUID so we ensure we still have a name
-                result = this.getOfflinePlayer(profile);
-            }
+            result = this.getOfflinePlayer(profile != null
+                    // Use the GameProfile even when we get a UUID so we ensure we still have a name
+                    ? profile
+                    // Make an OfflinePlayer using an offline mode UUID since the name has no profile
+                    : new GameProfile(UUID.nameUUIDFromBytes(("OfflinePlayer:" + name).getBytes(StandardCharsets.UTF_8)), name)
+            );
         } else {
             this.offlinePlatformPlayerCache.remove(result.getUniqueId());
         }
@@ -97,7 +85,7 @@ public class FabricPlatformPlayerFactory extends AbstractPlatformPlayerFactory<S
     }
 
     @Override
-    public void replaceNativePlayer(@NonNull UUID uuid, @NonNull ServerPlayerEntity serverPlayerEntity) {
+    public void replaceNativePlayer(@NotNull UUID uuid, @NotNull ServerPlayerEntity serverPlayerEntity) {
         super.cache.getPlayer(uuid).replaceNativePlayer(serverPlayerEntity);
     }
 

@@ -31,14 +31,11 @@ import com.github.retrooper.packetevents.protocol.world.states.type.StateType;
 import com.github.retrooper.packetevents.protocol.world.states.type.StateTypes;
 import com.github.retrooper.packetevents.util.Vector3d;
 import com.viaversion.viaversion.api.Via;
+import lombok.RequiredArgsConstructor;
 
-
+@RequiredArgsConstructor
 public class MovementTicker {
     public final GrimPlayer player;
-
-    public MovementTicker(GrimPlayer player) {
-        this.player = player;
-    }
 
     public static void handleEntityCollisions(GrimPlayer player) {
         // 1.7 and 1.8 do not have player collision
@@ -46,7 +43,8 @@ public class MovementTicker {
         boolean hasEntityPushing = !(player.getClientVersion().isOlderThan(ClientVersion.V_1_9)
                 // Check that ViaVersion disables all collisions on a 1.8 server for 1.9+ clients
                 || (!serverSupported
-                && (!ViaVersionUtil.isAvailable() || Via.getConfig().isPreventCollision())));
+                && (!ViaVersionUtil.isAvailable || Via.getConfig().isPreventCollision())));
+        if (!hasEntityPushing) return;
 
         int possibleCollidingEntities = 0;
         int possibleRiptideEntities = 0;
@@ -67,8 +65,7 @@ public class MovementTicker {
 
                 possibleRiptideEntities++;
 
-                if (!hasEntityPushing || !entity.isPushable())
-                    continue;
+                if (!entity.isPushable()) continue;
 
                 // Filters out entities that can't be pushed/collided because of team collision rules
                 // Also handles 1.9+ player on 1.8- server with ViaVersion prevent-collision disabled.
@@ -99,7 +96,7 @@ public class MovementTicker {
         float xxa = (float) player.predictedVelocity.input.getX();
         float zza = (float) player.predictedVelocity.input.getZ();
 
-        float yawInRadians = player.xRot * (float) (Math.PI / 180.0);
+        float yawInRadians = player.yaw * (float) (Math.PI / 180.0);
         double sin = player.trigHandler.sin(yawInRadians);
         double cos = player.trigHandler.cos(yawInRadians);
         double g = xxa * cos - zza * sin;

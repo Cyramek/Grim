@@ -9,12 +9,11 @@ import java.util.List;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+/*
+ * This is to hold whatever config manager was set via the reload method in the API
+ * and any global variables that are the same between players.
+ */
 public class BaseConfigManager {
-
-    /*
-    This is to hold whatever config manager was set via the reload method in the API
-    and any global variables that are the same between players.
-     */
 
     private final List<Pattern> ignoredClientPatterns = new ArrayList<>();
     @Getter
@@ -33,6 +32,9 @@ public class BaseConfigManager {
     private String disconnectBlacklistedForge;
     @Getter
     private boolean blockBlacklistedForgeClients;
+
+    @Getter
+    private boolean disablePongCancelling;
 
     // initialize the config
     public void load(ConfigManager config) {
@@ -61,6 +63,8 @@ public class BaseConfigManager {
         blockBlacklistedForgeClients = config.getBooleanElse("client-brand.disconnect-blacklisted-forge-versions", true);
         disconnectBlacklistedForge = config.getStringElse("disconnect.blacklisted-forge",
                 "<red>Your forge version is blacklisted due to inbuilt reach hacks.<newline><gold>Versions affected: 1.18.2-1.19.3<newline><newline><red>Please see https://github.com/MinecraftForge/MinecraftForge/issues/9309.");
+
+        disablePongCancelling = config.getBooleanElse("disable-pong-cancelling", false);
     }
 
     // ran on start, can be used to handle things that can't be done while loading
@@ -73,6 +77,4 @@ public class BaseConfigManager {
         }
         return false;
     }
-
-
 }
