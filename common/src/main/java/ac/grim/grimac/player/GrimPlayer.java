@@ -670,20 +670,20 @@ public class GrimPlayer implements GrimUser {
     // 1.21.2+ added end tick input packet, fixing skipped tick issues
     public Vector3dm[] getPossibleLookVectors(boolean isPrediction) {
         // https://bugs.mojang.com/browse/MC-67665
-        List<Vector3dm> possibleLookDirs = new ArrayList<>(Collections.singletonList(ReachUtils.getLook(this, this.xRot, this.yRot)));
+        List<Vector3dm> possibleLookDirs = new ArrayList<>(Collections.singletonList(ReachUtils.getLook(this, this.yaw, this.pitch)));
 
         // If we are a tick behind, we don't know their next look so don't bother doing this
         if (!isPrediction) {
-            possibleLookDirs.add(ReachUtils.getLook(this, this.lastXRot, this.yRot));
+            possibleLookDirs.add(ReachUtils.getLook(this, this.lastYaw, this.pitch));
 
             // 1.9+ players could be a tick behind because we don't get skipped ticks
             if (this.getClientVersion().isNewerThanOrEquals(ClientVersion.V_1_9)) {
-                possibleLookDirs.add(ReachUtils.getLook(this, this.lastXRot, this.lastYRot));
+                possibleLookDirs.add(ReachUtils.getLook(this, this.lastYaw, this.lastPitch));
             }
 
             // 1.7 players do not have any of these issues! They are always on the latest look vector
             if (this.getClientVersion().isOlderThan(ClientVersion.V_1_8)) {
-                possibleLookDirs = Collections.singletonList(ReachUtils.getLook(this, this.xRot, this.yRot));
+                possibleLookDirs = Collections.singletonList(ReachUtils.getLook(this, this.yaw, this.pitch));
             }
         }
 
