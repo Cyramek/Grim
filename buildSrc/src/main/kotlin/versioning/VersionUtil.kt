@@ -91,6 +91,7 @@ object VersionUtil {
         val mainBranch = System.getenv("GRIM_MAIN_BRANCH") ?: "2.0"
 
         return when (branch) {
+            "lightning" -> null
             "main", mainBranch -> null                    // ← ignore these branches
             else -> branch
         }

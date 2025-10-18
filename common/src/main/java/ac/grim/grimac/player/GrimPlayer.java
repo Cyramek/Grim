@@ -30,6 +30,7 @@ import ac.grim.grimac.utils.data.packetentity.PacketEntitySelf;
 import ac.grim.grimac.utils.data.tags.SyncedTags;
 import ac.grim.grimac.utils.enums.FluidTag;
 import ac.grim.grimac.utils.enums.Pose;
+import ac.grim.grimac.utils.inventory.InventoryDesyncStatus;
 import ac.grim.grimac.utils.latency.*;
 import ac.grim.grimac.utils.math.GrimMath;
 import ac.grim.grimac.utils.math.Location;
@@ -38,6 +39,7 @@ import ac.grim.grimac.utils.math.Vector3dm;
 import ac.grim.grimac.utils.nmsutil.BlockProperties;
 import ac.grim.grimac.utils.nmsutil.Collisions;
 import ac.grim.grimac.utils.nmsutil.GetBoundingBox;
+import ac.grim.grimac.utils.nmsutil.ReachUtils;
 import ac.grim.grimac.utils.nmsutil.Materials;
 import ac.grim.grimac.utils.reflection.ViaVersionUtil;
 import com.github.retrooper.packetevents.PacketEvents;
@@ -209,7 +211,7 @@ public class GrimPlayer implements GrimUser {
     public final CompensatedWorld compensatedWorld;
     public final CompensatedEntities compensatedEntities;
     public final CompensatedInventory inventory;
-    public final LatencyUtils latencyUtils = new LatencyUtils(this);
+    public final ILatencyUtils latencyUtils = new LatencyUtils(this);
     public final PointThreeEstimator pointThreeEstimator;
     public final TrigHandler trigHandler = new TrigHandler(this);
     public final PacketStateData packetStateData = new PacketStateData();
@@ -236,6 +238,9 @@ public class GrimPlayer implements GrimUser {
     // possibleEyeHeights[0] = Standing eye heights, [1] = Sneaking. [2] = Elytra, Swimming, and Riptide Trident which only exists in 1.9+
     public final double[][] possibleEyeHeights = new double[3][];
     public int totalFlyingPacketsSent;
+    public boolean hasInventoryOpen;
+    public long lastInventoryOpen;
+    public InventoryDesyncStatus inventoryDesyncStatus;
     public final Queue<BlockPlaceSnapshot> placeUseItemPackets = new LinkedBlockingQueue<>();
     public final Queue<BlockBreak> queuedBreaks = new LinkedBlockingQueue<>();
     public final PlayerBlockHistory blockHistory = new PlayerBlockHistory();
@@ -656,6 +661,33 @@ public class GrimPlayer implements GrimUser {
                 default -> this.possibleEyeHeights[0]; // [standing height, sneaking height, swimming/gliding/riptide height]
             };
         }
+    }
+
+    // 1.8-1.10.2 specific mouse delay fix (MC-67665)
+    // https://bugs.mojang.com/browse/MC-67665
+    // 1.9-1.21.1 specific desync due to skipped ticks
+    // Players can be a tick behind on both pitch and yaw together
+    // 1.21.2+ added end tick input packet, fixing skipped tick issues
+    public Vector3dm[] getPossibleLookVectors(boolean isPrediction) {
+        // https://bugs.mojang.com/browse/MC-67665
+        List<Vector3dm> possibleLookDirs = new ArrayList<>(Collections.singletonList(ReachUtils.getLook(this, this.xRot, this.yRot)));
+
+        // If we are a tick behind, we don't know their next look so don't bother doing this
+        if (!isPrediction) {
+            possibleLookDirs.add(ReachUtils.getLook(this, this.lastXRot, this.yRot));
+
+            // 1.9+ players could be a tick behind because we don't get skipped ticks
+            if (this.getClientVersion().isNewerThanOrEquals(ClientVersion.V_1_9)) {
+                possibleLookDirs.add(ReachUtils.getLook(this, this.lastXRot, this.lastYRot));
+            }
+
+            // 1.7 players do not have any of these issues! They are always on the latest look vector
+            if (this.getClientVersion().isOlderThan(ClientVersion.V_1_8)) {
+                possibleLookDirs = Collections.singletonList(ReachUtils.getLook(this, this.xRot, this.yRot));
+            }
+        }
+
+        return possibleLookDirs.toArray(new Vector3dm[0]);
     }
 
     @Override

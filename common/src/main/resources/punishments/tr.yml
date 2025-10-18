@@ -61,6 +61,15 @@ Punishments:
       - "20:20 [log]"
       - "40:40 [webhook]"
       - "40:40 [proxy]"
+  Inventory:
+    remove-violations-after: 300
+    checks: 
+      - "Inventory" 
+    commands: 
+      - "10:10 [alert]" 
+      - "10:10 [log]" 
+      - "20:20 [webhook]" 
+      - "20:20 [proxy]"
   Reach:
     remove-violations-after: 300
     checks:
@@ -79,6 +88,24 @@ Punishments:
       - "5:3 [log]"
       - "5:3 [webhook]"
       - "5:3 [proxy]"
+  WallHit:
+    remove-violations-after: 300
+    checks:
+      - "WallHit"
+    commands:
+      - "10:5 [alert]"
+      - "10:5 [webhook]"
+      - "10:5 [proxy]"
+      - "10:5 [log]"
+  EntityPierce:
+    remove-violations-after: 300
+    checks:
+      - "EntityPierce"
+    commands:
+      - "15:10 [alert]"
+      - "15:10 [webhook]"
+      - "15:10 [proxy]"
+      - "15:10 [log]"
   Misc:
     remove-violations-after: 300
     checks:
