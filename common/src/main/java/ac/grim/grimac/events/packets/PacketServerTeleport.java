@@ -2,8 +2,10 @@ package ac.grim.grimac.events.packets;
 
 import ac.grim.grimac.GrimAPI;
 import ac.grim.grimac.player.GrimPlayer;
+import ac.grim.grimac.utils.anticheat.LogUtil;
 import ac.grim.grimac.utils.data.Pair;
 import ac.grim.grimac.utils.data.RotationData;
+import ac.grim.grimac.utils.data.packetentity.PacketEntity;
 import ac.grim.grimac.utils.math.GrimMath;
 import ac.grim.grimac.utils.math.Location;
 import com.github.retrooper.packetevents.PacketEvents;
@@ -15,6 +17,7 @@ import com.github.retrooper.packetevents.protocol.packettype.PacketType;
 import com.github.retrooper.packetevents.protocol.player.ClientVersion;
 import com.github.retrooper.packetevents.protocol.teleport.RelativeFlag;
 import com.github.retrooper.packetevents.util.Vector3d;
+import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEntityTeleport;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerPlayerPositionAndLook;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerPlayerRotation;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerVehicleMove;
@@ -160,6 +163,29 @@ public class PacketServerTeleport extends PacketListenerAbstract {
             player.vehicleData.vehicleTeleports.add(new Pair<>(
                     player.lastTransactionSent.get(),
                     new WrapperPlayServerVehicleMove(event).getPosition()
+            ));
+        }
+
+        if (event.getPacketType() == PacketType.Play.Server.ENTITY_TELEPORT) {
+            GrimPlayer player = GrimAPI.INSTANCE.getPlayerDataManager().getPlayer(event.getUser());
+            if (player == null) return;
+
+            WrapperPlayServerEntityTeleport teleport = new WrapperPlayServerEntityTeleport(event);
+            PacketEntity entity = player.compensatedEntities.getEntity(teleport.getEntityId());
+            if (entity == null) return;
+
+            // todo: has indirect passenger
+            if (!player.inVehicle()) return;
+            if (player.getRidingVehicleId() != teleport.getEntityId()) {
+                LogUtil.info("vehicle teleport with wrong vehicle id, vehicle id: " + teleport.getEntityId());
+                return;
+            }
+
+            player.sendTransaction();
+            event.getTasksAfterSend().add(player::sendTransaction);
+            player.vehicleData.vehicleTeleports.add(new Pair<>(
+                    player.lastTransactionSent.get(),
+                    teleport.getPosition()
             ));
         }
     }
